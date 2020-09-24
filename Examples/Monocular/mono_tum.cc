@@ -59,11 +59,33 @@ int main(int argc, char **argv)
     cout << endl << "-------" << endl;
     cout << "Start processing sequence ..." << endl;
     cout << "Images in the sequence: " << nImages << endl << endl;
+    //*****************************
+    //是否手动输入图片
+    bool man_insert;
+    char type_in;
+    cout << "Do you want to manually feed in the images? (y/n)" << endl;
+    cin >> type_in;
+    if (type_in == 'Y' || type_in == 'y')
+    {
+        man_insert = true;
+    }
+    else
+    {
+        man_insert = false;
+    }
 
     // Main loop
     cv::Mat im;
     for(int ni=0; ni<nImages; ni++)
     {
+        //**************************************
+        if (man_insert)
+        {
+            cout << "Please type something in so that we can load another image." << endl;
+            cin >> type_in;
+        }
+        cout << "Load in image #" << ni << endl;
+
         // Read image from file
         im = cv::imread(string(argv[3])+"/"+vstrImageFilenames[ni],CV_LOAD_IMAGE_UNCHANGED);
         double tframe = vTimestamps[ni];
@@ -121,6 +143,18 @@ int main(int argc, char **argv)
 
     // Save camera trajectory
     SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
+
+    //**********************************
+    // Save customized Map  保存地图
+    char IsSaveMap;  
+    cout << "Do you want to save the map?(y/n)" << endl;  
+    cin >> IsSaveMap;  
+    if(IsSaveMap == 'Y' || IsSaveMap == 'y')  
+    {
+        SLAM.SaveMap("MapPointandKeyFrame.bin");
+        cout << "Map saved!" << endl;
+    }
+
 
     return 0;
 }

@@ -39,6 +39,10 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
                const bool bUseViewer):mSensor(sensor), mpViewer(static_cast<Viewer*>(NULL)), mbReset(false),mbActivateLocalizationMode(false),
         mbDeactivateLocalizationMode(false)
 {
+    //*************************************
+    //在构造函数中对mySettingFile成员变量赋值
+    mySettingFile=strSettingsFile;
+
     // Output welcome message
     cout << endl <<
     "ORB-SLAM2 Copyright (C) 2014-2016 Raul Mur-Artal, University of Zaragoza." << endl <<
@@ -113,6 +117,32 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
         mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,strSettingsFile);
         mptViewer = new thread(&Viewer::Run, mpViewer);
         mpTracker->SetViewer(mpViewer);
+    }
+
+    //**************************
+    // Choose to use pure localization mode
+    //选择使用纯本地化模式:这会停止本地映射线程(地图构建)，并仅执行相机跟踪。
+    char IsPureLocalization;
+    cout << "Do you want to run pure localization?(y/n)" << endl;
+    cin >> IsPureLocalization;
+    if(IsPureLocalization == 'Y' || IsPureLocalization == 'y'){  
+        ActivateLocalizationMode();
+    }
+
+    //加载地图
+    string strPathMap = "/home/hxg/code/ORB_SLAM2/MapPointandKeyFrame.bin";  //地图路径
+    SystemSetting *mySystemSetting = new SystemSetting(mpVocabulary);  
+    mySystemSetting->LoadSystemSetting(mySettingFile);
+    //Load map
+    char IsLoadMap;
+    cout << "Do you want to load the map?(y/n)" << endl;
+    cin >> IsLoadMap;
+    if (IsLoadMap == 'Y' || IsLoadMap == 'y')
+    {
+        //保存和加载地图只需要地图路径和参数设置路径即可，但是实现地图的复用（重定位）需要把mpKeyFrameDatabase这个指针也传进去
+        //即在加载地图时将加载出来的KeyFrame放到KeyFrameDatabase里面去
+        mpMap->Load(strPathMap, mySystemSetting, mpKeyFrameDatabase);
+        cout << "Map is Load!!" << endl;
     }
 
     //Set pointers between threads
@@ -330,6 +360,8 @@ void System::Shutdown()
 
     if(mpViewer)
         pangolin::BindToContext("ORB-SLAM2: Map Viewer");
+
+    cout << "System shut down." << endl;
 }
 
 void System::SaveTrajectoryTUM(const string &filename)
@@ -500,6 +532,12 @@ vector<cv::KeyPoint> System::GetTrackedKeyPointsUn()
 {
     unique_lock<mutex> lock(mMutexState);
     return mTrackedKeyPointsUn;
+}
+
+//保存地图函数
+void System::SaveMap(const string &filename)  
+{  
+    mpMap->Save(filename);
 }
 
 } //namespace ORB_SLAM

@@ -60,6 +60,9 @@ public:
     // Extract ORB on the image. 0 for left image and 1 for right image.
     void ExtractORB(int flag, const cv::Mat &im);
 
+    //************************
+    Frame(long unsigned int i);
+    
     // Compute Bag of Words representation.
     void ComputeBoW();
 
@@ -186,6 +189,12 @@ public:
     static float mnMaxY;
 
     static bool mbInitialComputations;
+
+    //*************************************
+    //关系着能否快速重定位成功
+    // 用于标识丢弃的匹配项的标志。
+    // Flag to identify Discarded matches.(For debug use)
+    std::vector<bool> mvbDiscarded;
 
 
 private:
